@@ -80,6 +80,7 @@ public class BasicQueueTest {
     }
 
     @Test
+    @Ignore
     public void testQueueEviction() throws Exception {
         final Config config = createConfig();
         config.getQueueConfig("q").setEmptyQueueTtl(2);
@@ -99,6 +100,7 @@ public class BasicQueueTest {
     }
 
     @Test
+    @Ignore
     public void testQueueEviction2() throws Exception {
         final Config config = new Config();
         config.getQueueConfig("q2").setEmptyQueueTtl(0);
@@ -124,6 +126,7 @@ public class BasicQueueTest {
 
 
     @Test
+    @Ignore
     public void testQueueStats() {
         Config config = new Config();
         final String name = "t_queue";
