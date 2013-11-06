@@ -29,6 +29,15 @@ public class PriorityQueueItem extends QueueItem {
         return super.compareTo(o);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PriorityQueueItem)) return false;
+
+        final PriorityQueueItem priorityQueueItem = (PriorityQueueItem) o;
+        return object.equals(priorityQueueItem);
+    }
+
     public void setData(Data data) {
         if (container != null){
             object = ((PriorityQueueContainer)container).toObject(data);

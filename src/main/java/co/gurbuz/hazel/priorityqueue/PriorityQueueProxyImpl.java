@@ -54,7 +54,7 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
         final NodeEngine nodeEngine = getNodeEngine();
         final Data data = nodeEngine.toData(e);
         final OfferOperation operation = new OfferOperation(name, unit.toMillis(timeout), data);
-        return invoke(operation);
+        return (Boolean)invoke(operation);
     }
 
     public E take() throws InterruptedException {
@@ -75,7 +75,7 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
         final NodeEngine nodeEngine = getNodeEngine();
         final Data data = nodeEngine.toData(o);
         RemoveOperation operation = new RemoveOperation(name, data);
-        return invoke(operation);
+        return (Boolean)invoke(operation);
     }
 
     public boolean contains(Object o) {
@@ -84,7 +84,7 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
         List<Data> dataList = new ArrayList<Data>(1);
         dataList.add(data);
         ContainsOperation operation = new ContainsOperation(name, dataList);
-        return invoke(operation);
+        return (Boolean)invoke(operation);
     }
 
     public int drainTo(Collection<? super E> objects) {
@@ -137,7 +137,7 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
 
     public int size() {
         SizeOperation operation = new SizeOperation(name);
-        return invoke(operation);
+        return (Integer)invoke(operation);
     }
 
     public boolean isEmpty() {
@@ -175,22 +175,22 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
 
     public boolean containsAll(Collection<?> c) {
         ContainsOperation operation = new ContainsOperation(name, getDataList(c));
-        return invoke(operation);
+        return (Boolean)invoke(operation);
     }
 
     public boolean addAll(Collection<? extends E> c) {
         final AddAllOperation operation = new AddAllOperation(name, getDataList(c));
-        return invoke(operation);
+        return (Boolean)invoke(operation);
     }
 
     public boolean removeAll(Collection<?> c) {
         CompareAndRemoveOperation operation = new CompareAndRemoveOperation(name, getDataList(c), false);
-        return invoke(operation);
+        return (Boolean)invoke(operation);
     }
 
     public boolean retainAll(Collection<?> c) {
         CompareAndRemoveOperation operation = new CompareAndRemoveOperation(name, getDataList(c), true);
-        return invoke(operation);
+        return (Boolean)invoke(operation);
     }
 
     public void clear() {
