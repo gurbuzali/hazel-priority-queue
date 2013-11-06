@@ -203,17 +203,6 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
 //    }
     //TODO stats
 
-
-//    public String addItemListener(ItemListener<E> listener, boolean includeValue) {
-//        return null;
-//    }
-//
-//    public boolean removeItemListener(String registrationId) {
-//        return false;
-//    }
-
-    //TODO add addItemListener method to service
-
     private <T> T invoke(QueueOperation operation){
         final NodeEngine nodeEngine = getNodeEngine();
         try {

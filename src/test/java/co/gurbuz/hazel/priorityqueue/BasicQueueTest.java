@@ -48,9 +48,8 @@ public class BasicQueueTest {
     }
 
     @Test
-    @Ignore
     public void testConfigListenerRegistration() throws InterruptedException {
-        Config config = new Config();
+        Config config = createConfig();
         final String name = "queue";
         final QueueConfig queueConfig = config.getQueueConfig(name);
         final DummyListener dummyListener = new DummyListener();
@@ -378,13 +377,11 @@ public class BasicQueueTest {
     }
 
     @Test
-    @Ignore
     public void testListeners() throws InterruptedException {
         final String name = "defQueue";
-        Config config = new Config();
+        Config config = createConfig();
         final int count = 100;
         config.getQueueConfig(name).setMaxSize(count);
-        final int insCount = 2;
         final HazelcastInstance[] instances = {Hazelcast.newHazelcastInstance(config), Hazelcast.newHazelcastInstance(config)};
         final CountDownLatch latch = new CountDownLatch(20);
         final AtomicBoolean notCalled = new AtomicBoolean(true);
