@@ -35,7 +35,11 @@ public class PriorityQueueItem extends QueueItem {
         if (!(o instanceof PriorityQueueItem)) return false;
 
         final PriorityQueueItem priorityQueueItem = (PriorityQueueItem) o;
-        return object.equals(priorityQueueItem);
+        if (object != null){
+            return object.equals(priorityQueueItem.object);
+        } else {
+            return data.equals(data);
+        }
     }
 
     public void setData(Data data) {
