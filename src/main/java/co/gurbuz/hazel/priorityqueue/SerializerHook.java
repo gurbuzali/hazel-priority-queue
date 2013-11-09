@@ -10,7 +10,7 @@ import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
  */
 public class SerializerHook implements DataSerializerHook {
 
-    static final int F_ID = FactoryIdHelper.getFactoryId("hazelcast.serialization.priority.queue", -21);
+    static final int F_ID = FactoryIdHelper.getFactoryId("hazelcast.serialization.priority.queue", -81);
 
     static final int CONTAINER = 1;
 

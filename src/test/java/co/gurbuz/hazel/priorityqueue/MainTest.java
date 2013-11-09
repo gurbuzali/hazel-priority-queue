@@ -1,6 +1,5 @@
-package co.gurbuz.hazel;
+package co.gurbuz.hazel.priorityqueue;
 
-import co.gurbuz.hazel.priorityqueue.PriorityQueueService;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.ServiceConfig;
 import com.hazelcast.config.ServicesConfig;
