@@ -8,6 +8,7 @@ import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 /**
  * @ali 05/11/13
  */
+//TODO not used, why?
 public class SerializerHook implements DataSerializerHook {
 
     static final int F_ID = FactoryIdHelper.getFactoryId("hazelcast.serialization.priority.queue", -81);
@@ -23,6 +24,7 @@ public class SerializerHook implements DataSerializerHook {
             public IdentifiedDataSerializable create(int typeId) {
                 switch (typeId){
                     case CONTAINER:
+                        System.err.println("asdf aloooo");
                         return new PriorityQueueContainer(null);
                 }
                 return null;
