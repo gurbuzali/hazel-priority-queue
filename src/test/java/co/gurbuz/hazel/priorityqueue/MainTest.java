@@ -1,13 +1,21 @@
 package co.gurbuz.hazel.priorityqueue;
 
+import co.gurbuz.hazel.priorityqueue.client.PriorityPortableHook;
+import co.gurbuz.hazel.priorityqueue.client.ProxyFactory;
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.client.config.ClientConfig;
+import com.hazelcast.client.config.ProxyFactoryConfig;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.SerializationConfig;
 import com.hazelcast.config.ServiceConfig;
 import com.hazelcast.config.ServicesConfig;
+import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.instance.GroupProperties;
 
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -40,21 +48,31 @@ public class MainTest {
         final Config config = new Config();
         final ServicesConfig servicesConfig = config.getServicesConfig();
         servicesConfig.addServiceConfig(serviceConfig);
+
+        SerializationConfig memberSerializationConfig = config.getSerializationConfig();
+        PriorityPortableHook hook = new PriorityPortableHook();
+        memberSerializationConfig.addPortableFactory(PriorityPortableHook.F_ID, hook.createFactory());
+
         final HazelcastInstance instance = Hazelcast.newHazelcastInstance(config);
+        IQueue memberQ = instance.getDistributedObject(PriorityQueueService.SERVICE_NAME, "foo");
 
+        ClientConfig clientConfig = new ClientConfig();
+        ProxyFactoryConfig proxyFactoryConfig = new ProxyFactoryConfig();
+        proxyFactoryConfig.setClassName(ProxyFactory.class.getName());
+        proxyFactoryConfig.setService(PriorityQueueService.SERVICE_NAME);
+        clientConfig.addProxyFactoryConfig(proxyFactoryConfig);
+        SerializationConfig clientSerializationConfig = clientConfig.getSerializationConfig();
+        clientSerializationConfig.addPortableFactory(PriorityPortableHook.F_ID, hook.createFactory());
 
+        HazelcastInstance client = HazelcastClient.newHazelcastClient(clientConfig);
 
-        final IQueue q = instance.getDistributedObject(PriorityQueueService.SERVICE_NAME, "ali");
-        q.offer("veli");
-        q.offer("ali");
+        IQueue clientQ = client.getDistributedObject(PriorityQueueService.SERVICE_NAME, "foo");
+        clientQ.offer("veli");
+        clientQ.offer("ali");
 
-        final HazelcastInstance instance2 = Hazelcast.newHazelcastInstance(config);
-
-        final IQueue q2 = instance2.getDistributedObject(PriorityQueueService.SERVICE_NAME, "ali");
-        System.err.println("item: " + q2.poll());
-        System.err.println("item: " + q2.poll());
-
-        instance.shutdown();
-
+        Object ali = memberQ.poll();
+        Object veli = memberQ.poll();
+        System.err.println("ali: " + ali);
+        System.err.println("veli: " + veli);
     }
 }
