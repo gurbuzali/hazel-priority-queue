@@ -1,6 +1,5 @@
 package co.gurbuz.hazel.priorityqueue.client;
 
-import com.hazelcast.client.proxy.ClientQueueProxy;
 import com.hazelcast.client.spi.ClientProxy;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.core.ItemListener;
@@ -14,29 +13,8 @@ import java.util.concurrent.TimeUnit;
 
 public class ClientPriorityQueueProxyImpl<E> extends ClientProxy implements IQueue<E> {
 
-    final ClientQueueProxy<E> queueProxy;
-
     public ClientPriorityQueueProxyImpl(String serviceName, String objectName) {
         super(serviceName, objectName);
-        queueProxy = new ClientQueueProxy<E>(serviceName, objectName);
-    }
-
-    public String addItemListener(ItemListener<E> listener, boolean includeValue) {
-        return queueProxy.addItemListener(listener, includeValue);
-    }
-
-    @Override
-    public boolean removeItemListener(String registrationId) {
-        return queueProxy.removeItemListener(registrationId);
-    }
-
-    @Override
-    public LocalQueueStats getLocalQueueStats() {
-        return queueProxy.getLocalQueueStats();
-    }
-
-    public boolean add(E e) {
-        return queueProxy.add(e);
     }
 
     public boolean offer(E e) {
@@ -47,10 +25,6 @@ public class ClientPriorityQueueProxyImpl<E> extends ClientProxy implements IQue
         }
     }
 
-    public void put(E e) throws InterruptedException {
-        queueProxy.put(e);
-    }
-
     public boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException {
         Data data = getContext().getSerializationService().toData(e);
         PriorityOfferRequest request = new PriorityOfferRequest(getName(), unit.toMillis(timeout), data);
@@ -59,113 +33,141 @@ public class ClientPriorityQueueProxyImpl<E> extends ClientProxy implements IQue
     }
 
     @Override
+    protected void onDestroy() {
+        
+    }
+
+    @Override
+    public boolean add(E e) {
+        return false;
+    }
+
+    @Override
+    public void put(E e) throws InterruptedException {
+
+    }
+
+    @Override
     public E take() throws InterruptedException {
-        return queueProxy.take();
+        return null;
     }
 
     @Override
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        return queueProxy.poll(timeout, unit);
+        return null;
     }
 
     @Override
     public int remainingCapacity() {
-        return queueProxy.remainingCapacity();
+        return 0;
     }
 
     @Override
     public boolean remove(Object o) {
-        return queueProxy.remove(o);
+        return false;
     }
 
     @Override
     public boolean contains(Object o) {
-        return queueProxy.contains(o);
+        return false;
     }
 
-    public int drainTo(Collection<? super E> objects) {
-        return queueProxy.drainTo(objects);
+    @Override
+    public int drainTo(Collection<? super E> c) {
+        return 0;
     }
 
+    @Override
     public int drainTo(Collection<? super E> c, int maxElements) {
-        return queueProxy.drainTo(c, maxElements);
+        return 0;
     }
 
     @Override
     public E remove() {
-        return queueProxy.remove();
+        return null;
     }
 
     @Override
     public E poll() {
-        return queueProxy.poll();
+        return null;
     }
 
     @Override
     public E element() {
-        return queueProxy.element();
+        return null;
     }
 
     @Override
     public E peek() {
-        return queueProxy.peek();
+        return null;
     }
 
     @Override
     public int size() {
-        return queueProxy.size();
+        return 0;
     }
 
     @Override
     public boolean isEmpty() {
-        return queueProxy.isEmpty();
+        return false;
     }
 
     @Override
     public Iterator<E> iterator() {
-        return queueProxy.iterator();
+        return null;
     }
 
     @Override
     public Object[] toArray() {
-        return queueProxy.toArray();
+        return new Object[0];
     }
 
     @Override
-    public <T> T[] toArray(T[] ts) {
-        return queueProxy.toArray(ts);
+    public <T> T[] toArray(T[] a) {
+        return null;
     }
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        return queueProxy.containsAll(c);
+        return false;
     }
 
+    @Override
     public boolean addAll(Collection<? extends E> c) {
-        return queueProxy.addAll(c);
+        return false;
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        return queueProxy.removeAll(c);
+        return false;
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        return queueProxy.retainAll(c);
+        return false;
     }
 
     @Override
     public void clear() {
-        queueProxy.clear();
+
     }
 
     @Override
-    protected void onDestroy() {
-        queueProxy.destroy();
+    public LocalQueueStats getLocalQueueStats() {
+        return null;
     }
 
-    private <T> T invoke(Object req){
+    @Override
+    public String addItemListener(ItemListener<E> listener, boolean includeValue) {
+        return null;
+    }
+
+    @Override
+    public boolean removeItemListener(String registrationId) {
+        return false;
+    }
+
+    private <T> T invoke(Object req) {
         try {
             return getContext().getInvocationService().invokeOnKeyOwner(req, getPartitionKey());
         } catch (Exception e) {
