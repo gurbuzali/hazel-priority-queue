@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <hazelcast.version>3.1</hazelcast.version>
+        <hazelcast.version>3.3.4-SNAPSHOT</hazelcast.version>
         <junit.version>4.11</junit.version>
     </properties>
 

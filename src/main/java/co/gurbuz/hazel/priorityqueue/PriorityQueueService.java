@@ -1,8 +1,8 @@
 package co.gurbuz.hazel.priorityqueue;
 
-import com.hazelcast.queue.QueueContainer;
-import com.hazelcast.queue.QueueService;
-import com.hazelcast.queue.proxy.QueueProxyImpl;
+import com.hazelcast.queue.impl.QueueContainer;
+import com.hazelcast.queue.impl.QueueService;
+import com.hazelcast.queue.impl.proxy.QueueProxyImpl;
 import com.hazelcast.spi.NodeEngine;
 
 import java.util.concurrent.ConcurrentHashMap;

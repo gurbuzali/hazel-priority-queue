@@ -1,5 +1,6 @@
 package co.gurbuz.hazel.priorityqueue.client;
 
+import com.hazelcast.client.impl.client.ClientRequest;
 import com.hazelcast.client.spi.ClientProxy;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.core.ItemListener;
@@ -28,7 +29,7 @@ public class ClientPriorityQueueProxyImpl<E> extends ClientProxy implements IQue
     public boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException {
         Data data = getContext().getSerializationService().toData(e);
         PriorityOfferRequest request = new PriorityOfferRequest(getName(), unit.toMillis(timeout), data);
-        final Boolean result = invoke(request);
+        final Boolean result = invokeInterruptibly(request);
         return result;
     }
 
@@ -167,11 +168,8 @@ public class ClientPriorityQueueProxyImpl<E> extends ClientProxy implements IQue
         return false;
     }
 
-    private <T> T invoke(Object req) {
-        try {
-            return getContext().getInvocationService().invokeOnKeyOwner(req, getPartitionKey());
-        } catch (Exception e) {
-            throw ExceptionUtil.rethrow(e);
-        }
+    protected <T> T invokeInterruptibly(ClientRequest req) throws InterruptedException {
+        return super.invokeInterruptibly(req, getPartitionKey());
     }
+
 }

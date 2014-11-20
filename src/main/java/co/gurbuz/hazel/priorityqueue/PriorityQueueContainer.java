@@ -8,21 +8,35 @@ import com.hazelcast.monitor.impl.LocalQueueStatsImpl;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.Data;
-import com.hazelcast.queue.*;
+import com.hazelcast.nio.serialization.SerializationService;
+import com.hazelcast.queue.impl.QueueContainer;
+import com.hazelcast.queue.impl.QueueItem;
+import com.hazelcast.queue.impl.QueueService;
+import com.hazelcast.queue.impl.QueueStoreWrapper;
+import com.hazelcast.queue.impl.QueueWaitNotifyKey;
+import com.hazelcast.queue.impl.TxQueueItem;
 import com.hazelcast.spi.NodeEngine;
 import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.util.Clock;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @ali 05/11/13
  */
 public class PriorityQueueContainer extends QueueContainer {
 
-    private PriorityBlockingQueue<QueueItem> itemQueue = null;
+    private FakeDequeWrapper<QueueItem> itemQueue = null;
     private HashMap<Long, QueueItem> backupMap = null;
     private final Map<Long, TxQueueItem> txMap = new HashMap<Long, TxQueueItem>();
     private final HashMap<Long, Data> dataMap = new HashMap<Long, Data>();
@@ -62,7 +76,7 @@ public class PriorityQueueContainer extends QueueContainer {
         setConfig(config, nodeEngine, service);
     }
 
-    public void init(boolean fromBackup){
+    public void init(boolean fromBackup) {
         if (!fromBackup && store.isEnabled()) {
             Set<Long> keys = store.loadAllKeys();
             if (keys != null) {
@@ -75,7 +89,7 @@ public class PriorityQueueContainer extends QueueContainer {
         }
     }
 
-    public <T> T toObject(Object object){
+    public <T> T toObject(Object object) {
         return nodeEngine.toObject(object);
     }
 
@@ -93,7 +107,7 @@ public class PriorityQueueContainer extends QueueContainer {
         QueueItem item = getItemQueue().poll();
         if (item == null) {
             TxQueueItem txItem = txMap.remove(reservedOfferId);
-            if (txItem == null){
+            if (txItem == null) {
                 return null;
             }
             item = new PriorityQueueItem(this, txItem.getItemId(), txItem.getData());
@@ -110,13 +124,12 @@ public class PriorityQueueContainer extends QueueContainer {
         return item;
     }
 
-    public boolean txnPollBackupReserve(long itemId, String transactionId) {
+    public void txnPollBackupReserve(long itemId, String transactionId) {
         QueueItem item = getBackupMap().remove(itemId);
         if (item == null) {
             throw new TransactionException("Backup reserve failed: " + itemId);
         }
         txMap.put(itemId, new TxQueueItem(item).setPollOperation(true).setTransactionId(transactionId));
-        return true;
     }
 
     public Data txnCommitPoll(long itemId) {
@@ -178,8 +191,7 @@ public class PriorityQueueContainer extends QueueContainer {
         item.setData(data);
         if (!backup) {
             getItemQueue().offer(item);
-        }
-        else{
+        } else {
             getBackupMap().put(itemId, item);
         }
         if (store.isEnabled()) {
@@ -210,11 +222,11 @@ public class PriorityQueueContainer extends QueueContainer {
     public QueueItem txnPeek(long offerId, String transactionId) {
         QueueItem item = getItemQueue().peek();
         if (item == null) {
-            if ( offerId == -1 ){
+            if (offerId == -1) {
                 return null;
             }
             TxQueueItem txItem = txMap.get(offerId);
-            if (txItem == null){
+            if (txItem == null) {
                 return null;
             }
             item = new PriorityQueueItem(this, txItem.getItemId(), txItem.getData());
@@ -371,10 +383,10 @@ public class PriorityQueueContainer extends QueueContainer {
     }
 
     public int size() {
-        return Math.min(config.getMaxSize(),getItemQueue().size());
+        return Math.min(config.getMaxSize(), getItemQueue().size());
     }
 
-    public int backupSize(){
+    public int backupSize() {
         return getBackupMap().size();
     }
 
@@ -438,12 +450,12 @@ public class PriorityQueueContainer extends QueueContainer {
         for (Data data : dataSet) {
             boolean contains = false;
             for (QueueItem item : getItemQueue()) {
-                if (item.getData() != null && item.getData().equals(data)){
+                if (item.getData() != null && item.getData().equals(data)) {
                     contains = true;
                     break;
                 }
             }
-            if (!contains){
+            if (!contains) {
                 return false;
             }
         }
@@ -536,9 +548,9 @@ public class PriorityQueueContainer extends QueueContainer {
         return (getItemQueue().size() + delta) <= config.getMaxSize();
     }
 
-    PriorityBlockingQueue<QueueItem> getItemQueue() {
+    public FakeDequeWrapper<QueueItem> getItemQueue() {
         if (itemQueue == null) {
-            itemQueue = new PriorityBlockingQueue<QueueItem>();
+            itemQueue = new FakeDequeWrapper<QueueItem>();
             if (backupMap != null && !backupMap.isEmpty()) {
                 List<QueueItem> values = new ArrayList<QueueItem>(backupMap.values());
                 Collections.sort(values);
@@ -550,11 +562,11 @@ public class PriorityQueueContainer extends QueueContainer {
         return itemQueue;
     }
 
-    Map<Long, QueueItem> getBackupMap(){
-        if (backupMap == null){
+    Map<Long, QueueItem> getBackupMap() {
+        if (backupMap == null) {
             backupMap = new HashMap<Long, QueueItem>();
-            if (itemQueue != null){
-                for (QueueItem item: itemQueue){
+            if (itemQueue != null) {
+                for (QueueItem item : itemQueue) {
                     backupMap.put(item.getItemId(), item);
                 }
                 itemQueue.clear();
@@ -565,7 +577,6 @@ public class PriorityQueueContainer extends QueueContainer {
     }
 
 
-
     public Data getDataFromMap(long itemId) {
         return dataMap.remove(itemId);
     }
@@ -573,11 +584,12 @@ public class PriorityQueueContainer extends QueueContainer {
     public void setConfig(QueueConfig config, NodeEngine nodeEngine, QueueService service) {
         this.nodeEngine = nodeEngine;
         this.service = service;
-        logger = nodeEngine.getLogger(QueueContainer.class);
-        store = new QueueStoreWrapper(nodeEngine.getSerializationService());
+        this.logger = nodeEngine.getLogger(QueueContainer.class);
         this.config = new QueueConfig(config);
-        QueueStoreConfig storeConfig = config.getQueueStoreConfig();
-        store.setConfig(storeConfig, name);
+        // init queue store.
+        final QueueStoreConfig storeConfig = config.getQueueStoreConfig();
+        final SerializationService serializationService = nodeEngine.getSerializationService();
+        this.store = QueueStoreWrapper.create(name, storeConfig, serializationService);
     }
 
     long nextId() {
@@ -585,7 +597,7 @@ public class PriorityQueueContainer extends QueueContainer {
     }
 
     void setId(long itemId) {
-        idGenerator = Math.max(itemId+1, idGenerator);
+        idGenerator = Math.max(itemId + 1, idGenerator);
     }
 
     public QueueWaitNotifyKey getPollWaitNotifyKey() {
@@ -619,40 +631,40 @@ public class PriorityQueueContainer extends QueueContainer {
         stats.setAveAge(totalAge / totalAgedCountVal);
     }
 
-    private void scheduleEvictionIfEmpty(){
+    private void scheduleEvictionIfEmpty() {
         final int emptyQueueTtl = config.getEmptyQueueTtl();
-        if (emptyQueueTtl < 0){
+        if (emptyQueueTtl < 0) {
             return;
         }
-        if(getItemQueue().isEmpty() && txMap.isEmpty() && !isEvictionScheduled ){
-            if (emptyQueueTtl == 0){
+        if (getItemQueue().isEmpty() && txMap.isEmpty() && !isEvictionScheduled) {
+            if (emptyQueueTtl == 0) {
                 nodeEngine.getProxyService().destroyDistributedObject(QueueService.SERVICE_NAME, name);
-            } else if (emptyQueueTtl > 0){
-                service.scheduleEviction(name, emptyQueueTtl*1000);
+            } else if (emptyQueueTtl > 0) {
+                service.scheduleEviction(name, emptyQueueTtl * 1000);
                 isEvictionScheduled = true;
             }
         }
     }
 
-    public void cancelEvictionIfExists(){
-        if (isEvictionScheduled){
+    public void cancelEvictionIfExists() {
+        if (isEvictionScheduled) {
             service.cancelEviction(name);
             isEvictionScheduled = false;
         }
     }
 
-    public boolean isEvictable(){
+    public boolean isEvictable() {
         return getItemQueue().isEmpty() && txMap.isEmpty();
     }
 
-    public void rollbackTransaction(String transactionId){
+    public void rollbackTransaction(String transactionId) {
         final Iterator<TxQueueItem> iterator = txMap.values().iterator();
 
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             final TxQueueItem item = iterator.next();
-            if (transactionId.equals(item.getTransactionId())){
+            if (transactionId.equals(item.getTransactionId())) {
                 iterator.remove();
-                if (item.isPollOperation()){
+                if (item.isPollOperation()) {
                     getItemQueue().offer(item);
                 }
             }
@@ -689,11 +701,11 @@ public class PriorityQueueContainer extends QueueContainer {
         }
     }
 
-    public void destroy(){
-        if (itemQueue != null){
+    public void destroy() {
+        if (itemQueue != null) {
             itemQueue.clear();
         }
-        if (backupMap != null){
+        if (backupMap != null) {
             backupMap.clear();
         }
         txMap.clear();
