@@ -2,16 +2,32 @@ package co.gurbuz.hazel.priorityqueue;
 
 import com.hazelcast.config.QueueConfig;
 import com.hazelcast.nio.serialization.Data;
-import com.hazelcast.queue.*;
-import com.hazelcast.queue.proxy.QueueIterator;
-import com.hazelcast.queue.proxy.QueueProxyImpl;
-import com.hazelcast.spi.Invocation;
+import com.hazelcast.queue.impl.operations.AddAllOperation;
+import com.hazelcast.queue.impl.operations.ClearOperation;
+import com.hazelcast.queue.impl.operations.CompareAndRemoveOperation;
+import com.hazelcast.queue.impl.operations.ContainsOperation;
+import com.hazelcast.queue.impl.operations.DrainOperation;
+import com.hazelcast.queue.impl.operations.IteratorOperation;
+import com.hazelcast.queue.impl.operations.OfferOperation;
+import com.hazelcast.queue.impl.operations.PeekOperation;
+import com.hazelcast.queue.impl.operations.PollOperation;
+import com.hazelcast.queue.impl.operations.QueueOperation;
+import com.hazelcast.queue.impl.operations.RemoveOperation;
+import com.hazelcast.queue.impl.operations.SizeOperation;
+import com.hazelcast.queue.impl.proxy.QueueIterator;
+import com.hazelcast.queue.impl.proxy.QueueProxyImpl;
+import com.hazelcast.spi.InternalCompletableFuture;
+import com.hazelcast.spi.InvocationBuilder;
 import com.hazelcast.spi.NodeEngine;
+import com.hazelcast.spi.OperationService;
 import com.hazelcast.spi.impl.SerializableCollection;
 import com.hazelcast.util.ExceptionUtil;
 
-import java.util.*;
-import java.util.concurrent.Future;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -54,7 +70,7 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
         final NodeEngine nodeEngine = getNodeEngine();
         final Data data = nodeEngine.toData(e);
         final OfferOperation operation = new OfferOperation(name, unit.toMillis(timeout), data);
-        return (Boolean)invoke(operation);
+        return (Boolean) invoke(operation);
     }
 
     public E take() throws InterruptedException {
@@ -75,7 +91,7 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
         final NodeEngine nodeEngine = getNodeEngine();
         final Data data = nodeEngine.toData(o);
         RemoveOperation operation = new RemoveOperation(name, data);
-        return (Boolean)invoke(operation);
+        return (Boolean) invoke(operation);
     }
 
     public boolean contains(Object o) {
@@ -84,7 +100,7 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
         List<Data> dataList = new ArrayList<Data>(1);
         dataList.add(data);
         ContainsOperation operation = new ContainsOperation(name, dataList);
-        return (Boolean)invoke(operation);
+        return (Boolean) invoke(operation);
     }
 
     public int drainTo(Collection<? super E> objects) {
@@ -137,7 +153,7 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
 
     public int size() {
         SizeOperation operation = new SizeOperation(name);
-        return (Integer)invoke(operation);
+        return (Integer) invoke(operation);
     }
 
     public boolean isEmpty() {
@@ -175,22 +191,22 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
 
     public boolean containsAll(Collection<?> c) {
         ContainsOperation operation = new ContainsOperation(name, getDataList(c));
-        return (Boolean)invoke(operation);
+        return (Boolean) invoke(operation);
     }
 
     public boolean addAll(Collection<? extends E> c) {
         final AddAllOperation operation = new AddAllOperation(name, getDataList(c));
-        return (Boolean)invoke(operation);
+        return (Boolean) invoke(operation);
     }
 
     public boolean removeAll(Collection<?> c) {
         CompareAndRemoveOperation operation = new CompareAndRemoveOperation(name, getDataList(c), false);
-        return (Boolean)invoke(operation);
+        return (Boolean) invoke(operation);
     }
 
     public boolean retainAll(Collection<?> c) {
         CompareAndRemoveOperation operation = new CompareAndRemoveOperation(name, getDataList(c), true);
-        return (Boolean)invoke(operation);
+        return (Boolean) invoke(operation);
     }
 
     public void clear() {
@@ -203,20 +219,15 @@ public class PriorityQueueProxyImpl<E> extends QueueProxyImpl<E> {
 //    }
     //TODO stats
 
-    private <T> T invoke(QueueOperation operation){
+    private <T> T invoke(QueueOperation operation) {
         final NodeEngine nodeEngine = getNodeEngine();
         try {
-            Invocation inv = nodeEngine.getOperationService().createInvocationBuilder(PriorityQueueService.SERVICE_NAME, operation, partitionId).build();
-            Future f = inv.invoke();
+            OperationService operationService = nodeEngine.getOperationService();
+            InvocationBuilder builder = operationService.createInvocationBuilder(PriorityQueueService.SERVICE_NAME, operation, partitionId);
+            InternalCompletableFuture f = builder.invoke();
             return nodeEngine.toObject(f.get());
         } catch (Throwable throwable) {
             throw ExceptionUtil.rethrow(throwable);
-        }
-    }
-
-    private void throwExceptionIfNull(Object o) {
-        if (o == null) {
-            throw new NullPointerException("Object is null");
         }
     }
 

@@ -1,7 +1,7 @@
 package co.gurbuz.hazel.priorityqueue;
 
 import com.hazelcast.nio.serialization.Data;
-import com.hazelcast.queue.QueueItem;
+import com.hazelcast.queue.impl.QueueItem;
 
 /**
  * @ali 05/11/13

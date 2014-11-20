@@ -2,27 +2,25 @@ package co.gurbuz.hazel.priorityqueue.client;
 
 import com.hazelcast.nio.serialization.ArrayPortableFactory;
 import com.hazelcast.nio.serialization.ClassDefinition;
-import com.hazelcast.nio.serialization.FactoryIdHelper;
 import com.hazelcast.nio.serialization.Portable;
 import com.hazelcast.nio.serialization.PortableFactory;
 import com.hazelcast.nio.serialization.PortableHook;
-import com.hazelcast.queue.client.AddAllRequest;
-import com.hazelcast.queue.client.AddListenerRequest;
-import com.hazelcast.queue.client.ClearRequest;
-import com.hazelcast.queue.client.CompareAndRemoveRequest;
-import com.hazelcast.queue.client.ContainsRequest;
-import com.hazelcast.queue.client.DrainRequest;
-import com.hazelcast.queue.client.IteratorRequest;
-import com.hazelcast.queue.client.OfferRequest;
-import com.hazelcast.queue.client.PeekRequest;
-import com.hazelcast.queue.client.PollRequest;
-import com.hazelcast.queue.client.RemainingCapacityRequest;
-import com.hazelcast.queue.client.RemoveRequest;
-import com.hazelcast.queue.client.SizeRequest;
-import com.hazelcast.queue.client.TxnOfferRequest;
-import com.hazelcast.queue.client.TxnPeekRequest;
-import com.hazelcast.queue.client.TxnPollRequest;
-import com.hazelcast.queue.client.TxnSizeRequest;
+import com.hazelcast.queue.impl.client.AddAllRequest;
+import com.hazelcast.queue.impl.client.AddListenerRequest;
+import com.hazelcast.queue.impl.client.ClearRequest;
+import com.hazelcast.queue.impl.client.CompareAndRemoveRequest;
+import com.hazelcast.queue.impl.client.ContainsRequest;
+import com.hazelcast.queue.impl.client.DrainRequest;
+import com.hazelcast.queue.impl.client.IteratorRequest;
+import com.hazelcast.queue.impl.client.PeekRequest;
+import com.hazelcast.queue.impl.client.PollRequest;
+import com.hazelcast.queue.impl.client.RemainingCapacityRequest;
+import com.hazelcast.queue.impl.client.RemoveRequest;
+import com.hazelcast.queue.impl.client.SizeRequest;
+import com.hazelcast.queue.impl.client.TxnOfferRequest;
+import com.hazelcast.queue.impl.client.TxnPeekRequest;
+import com.hazelcast.queue.impl.client.TxnPollRequest;
+import com.hazelcast.queue.impl.client.TxnSizeRequest;
 import com.hazelcast.util.ConstructorFunction;
 
 import java.util.Collection;
@@ -61,7 +59,7 @@ public class PriorityPortableHook implements PortableHook {
     @Override
     public PortableFactory createFactory() {
 
-        ConstructorFunction<Integer, Portable> constructors[] = new ConstructorFunction[TXN_PEEK+1];
+        ConstructorFunction<Integer, Portable> constructors[] = new ConstructorFunction[TXN_PEEK + 1];
 
         constructors[OFFER] = new ConstructorFunction<Integer, Portable>() {
             @Override

@@ -3,8 +3,7 @@ package co.gurbuz.hazel.priorityqueue.client;
 
 import co.gurbuz.hazel.priorityqueue.PriorityQueueService;
 import com.hazelcast.nio.serialization.Data;
-import com.hazelcast.queue.QueuePortableHook;
-import com.hazelcast.queue.client.OfferRequest;
+import com.hazelcast.queue.impl.client.OfferRequest;
 
 public class PriorityOfferRequest extends OfferRequest {
 
