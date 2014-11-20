@@ -22,7 +22,7 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 public class PriorityQueueContainer extends QueueContainer {
 
-    private PriorityBlockingQueue<QueueItem> itemQueue = null;
+    private FakeDequeWrapper<QueueItem> itemQueue = null;
     private HashMap<Long, QueueItem> backupMap = null;
     private final Map<Long, TxQueueItem> txMap = new HashMap<Long, TxQueueItem>();
     private final HashMap<Long, Data> dataMap = new HashMap<Long, Data>();
@@ -110,13 +110,12 @@ public class PriorityQueueContainer extends QueueContainer {
         return item;
     }
 
-    public boolean txnPollBackupReserve(long itemId, String transactionId) {
+    public void txnPollBackupReserve(long itemId, String transactionId) {
         QueueItem item = getBackupMap().remove(itemId);
         if (item == null) {
             throw new TransactionException("Backup reserve failed: " + itemId);
         }
         txMap.put(itemId, new TxQueueItem(item).setPollOperation(true).setTransactionId(transactionId));
-        return true;
     }
 
     public Data txnCommitPoll(long itemId) {
@@ -536,9 +535,9 @@ public class PriorityQueueContainer extends QueueContainer {
         return (getItemQueue().size() + delta) <= config.getMaxSize();
     }
 
-    PriorityBlockingQueue<QueueItem> getItemQueue() {
+    public FakeDequeWrapper<QueueItem> getItemQueue() {
         if (itemQueue == null) {
-            itemQueue = new PriorityBlockingQueue<QueueItem>();
+            itemQueue = new FakeDequeWrapper<QueueItem>();
             if (backupMap != null && !backupMap.isEmpty()) {
                 List<QueueItem> values = new ArrayList<QueueItem>(backupMap.values());
                 Collections.sort(values);
